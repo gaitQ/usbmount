@@ -119,7 +119,7 @@ if [ "$1" = add ]; then
 	if in_list "$fstype" "$FILESYSTEMS"; then
 	    # Search an available mountpoint.
 	    for v in $MOUNTPOINTS; do
-		if [ -d "$v" ] && ! grep -q "^[^ ][^ ]*  *$v " /proc/mounts; then
+		if ! grep -q "^[^ ][^ ]*  *$v " /proc/mounts; then
 		    mountpoint="$v"
 		    log debug "mountpoint $mountpoint is available for $DEVNAME"
 		    break
@@ -139,6 +139,7 @@ if [ "$1" = add ]; then
 		fi
 
 		# Mount the filesystem.
+    mkdir -p "$mountpoint"
 		log info "executing command: mount -t$fstype ${options:+-o$options} $DEVNAME $mountpoint"
 		mount "-t$fstype" "${options:+-o$options}" "$DEVNAME" "$mountpoint"
 
@@ -195,6 +196,8 @@ elif [ "$1" = remove ]; then
 		in_list "$fstype" "$FILESYSTEMS"; then
 		log info "executing command: umount -l $mountpoint"
 		umount -l "$mountpoint"
+
+    rmdir "$mountpoint"
 
 		# Run hook scripts; ignore errors.
 		export UM_DEVICE="$DEVNAME"
